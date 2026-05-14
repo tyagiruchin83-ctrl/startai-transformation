@@ -179,6 +179,7 @@
       min-width: 80px;
       flex: 1;
       position: relative;
+      cursor: pointer;
     }
 
     .step:not(:last-child)::after {
@@ -891,6 +892,12 @@
             <span>📧</span> Email Report
           </button>
         </div>
+        
+        <div class="text-center mt-16">
+          <button class="export-btn" onclick="goToStartPage()" style="background: var(--accent-brand); color: white; border: none;">
+            <span>🏠</span> Go to Start Page
+          </button>
+        </div>
       </div>
     </section>
   </main>
@@ -898,13 +905,20 @@
   <script>
     // Templates Data
     const templates = [
-      { id: 'customer-support', name: 'Customer Support AI', icon: '🎧', desc: 'Automate ticket routing, responses, and escalation' },
-      { id: 'invoice', name: 'Invoice Automation', icon: '📄', desc: 'OCR + LLM for invoice processing and data extraction' },
-      { id: 'hr', name: 'HR Copilot', icon: '👥', desc: 'Employee self-service, policy Q&A, onboarding assistance' },
-      { id: 'sales', name: 'Sales AI Agent', icon: '📈', desc: 'Lead qualification, follow-ups, CRM automation' },
-      { id: 'knowledge', name: 'Knowledge Assistant', icon: '📚', desc: 'Internal wiki Q&A, document search, SOP guidance' },
-      { id: 'compliance', name: 'Compliance AI', icon: '⚖️', desc: 'Policy monitoring, risk assessment, audit automation' },
-      { id: 'custom', name: 'Custom Assessment', icon: '⚙️', desc: 'Build a tailored assessment for your unique use case' }
+      { id: 'customer-support', name: 'Customer Support AI', icon: '🎧', desc: 'Automate ticket routing, responses, and escalation',
+        suggestedUseCases: ['Automate ticket routing', 'Auto-respond to common queries', 'Escalate complex issues to human agents', 'Analyze support sentiment trends'] },
+      { id: 'invoice', name: 'Invoice Automation', icon: '📄', desc: 'OCR + LLM for invoice processing and data extraction',
+        suggestedUseCases: ['Extract data from PDF invoices', 'Validate invoice details against PO', 'Auto-enter invoices into accounting system', 'Flag duplicate invoices'] },
+      { id: 'hr', name: 'HR Copilot', icon: '👥', desc: 'Employee self-service, policy Q&A, onboarding assistance',
+        suggestedUseCases: ['Answer employee policy questions', 'Automate onboarding paperwork', 'Screen job applications', 'Schedule interviews automatically'] },
+      { id: 'sales', name: 'Sales AI Agent', icon: '📈', desc: 'Lead qualification, follow-ups, CRM automation',
+        suggestedUseCases: ['Qualify inbound leads', 'Send personalized follow-up emails', 'Update CRM with lead scores', 'Predict deal closure probability'] },
+      { id: 'knowledge', name: 'Knowledge Assistant', icon: '📚', desc: 'Internal wiki Q&A, document search, SOP guidance',
+        suggestedUseCases: ['Search internal wiki for SOPs', 'Answer technical questions from docs', 'Generate summaries of long documents', 'Give onboarding guidance to new hires'] },
+      { id: 'compliance', name: 'Compliance AI', icon: '⚖️', desc: 'Policy monitoring, risk assessment, audit automation',
+        suggestedUseCases: ['Monitor transactions for AML flags', 'Auto-generate compliance reports', 'Scan policies for regulatory changes', 'Audit access logs for anomalies'] },
+      { id: 'custom', name: 'Custom Assessment', icon: '⚙️', desc: 'Build a tailored assessment for your unique use case',
+        suggestedUseCases: [] }
     ];
 
     // Assessment Steps
@@ -1044,7 +1058,7 @@
     // Render Progress Steps
     function renderProgressSteps() {
       progressSteps.innerHTML = steps.map((step, index) => `
-        <div class="step ${index === currentStep ? 'active' : ''} ${index < currentStep ? 'completed' : ''}" data-step="${index}">
+        <div class="step ${index === currentStep ? 'active' : ''} ${index < currentStep ? 'completed' : ''}" data-step="${index}" onclick="goToStep(${index})">
           <div class="step-indicator">${index < currentStep ? '✓' : index + 1}</div>
           <div class="step-label">${step.title}</div>
         </div>
@@ -1073,6 +1087,20 @@
             <div class="ai-suggestion-content" id="aiSuggestionContent"></div>
           </div>
         `;
+        
+        // Add suggested use cases for 'use-case' step
+        if (step.id === 'use-case' && selectedTemplate && selectedTemplate.suggestedUseCases && selectedTemplate.suggestedUseCases.length > 0) {
+          content += `
+            <div class="suggested-usecases" style="margin-top: 16px; padding: 12px; background: var(--bg-surface); border-radius: var(--radius-sm);">
+              <div style="font-size: 13px; color: var(--text-tertiary); margin-bottom: 8px;">Suggested use cases for ${selectedTemplate.name}:</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                ${selectedTemplate.suggestedUseCases.map(useCase => `
+                  <div class="chip suggested-chip" style="cursor: pointer;" onclick="addSuggestedUseCase(this.dataset.usecase)" data-usecase="${useCase}">${useCase}</div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
       } else if (step.type === 'chips') {
         const selected = answers[step.id] || [];
         content += `<div class="chips-container" id="chipsContainer">`;
@@ -1154,6 +1182,16 @@
       
       suggestion.classList.remove('hidden');
       updateReport();
+    }
+
+    // Add suggested use case to textarea
+    function addSuggestedUseCase(useCase) {
+      const textInput = document.getElementById('textAnswer');
+      if (!textInput) return;
+      const current = textInput.value;
+      textInput.value = current ? current + '; ' + useCase : useCase;
+      // Trigger input event to update answers
+      textInput.dispatchEvent(new Event('input'));
     }
 
     // Mock AI Analysis
@@ -1716,6 +1754,40 @@
       html.setAttribute('data-theme', newTheme);
       themeIcon.textContent = newTheme === 'dark' ? '🌙' : '☀️';
       localStorage.setItem('theme', newTheme);
+    }
+
+    // Go to Start Page Function
+    function goToStartPage() {
+      // Hide completion dashboard
+      document.getElementById('completionDashboard').classList.add('hidden');
+      // Show template selection (start page)
+      document.getElementById('templateSelection').classList.remove('hidden');
+      // Reset assessment state
+      answers = {};
+      currentStep = 0;
+      readinessScore = 0;
+      selectedTemplate = null;
+      // Reset buttons
+      document.getElementById('beginAssessment').disabled = true;
+      // Clear any dynamic content
+      document.getElementById('execSummary').innerHTML = '';
+      document.getElementById('maturityScores').innerHTML = '';
+      document.getElementById('roadmap').innerHTML = '';
+      // Remove dynamically added sections if they exist
+      ['llmRecs', 'agenticRecs', 'archRecs', 'matrixRecs', 'costRecs', 'execRecs'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.parentNode) el.parentNode.removeChild(el);
+      });
+    }
+
+    // Go to specific step by clicking progress number
+    function goToStep(stepIndex) {
+      if (stepIndex < 0 || stepIndex >= steps.length) return;
+      currentStep = stepIndex;
+      renderCurrentStep();
+      renderProgressSteps();
+      // Update navigation buttons
+      updateNavigation();
     }
 
     // AI Enhance Section Function
