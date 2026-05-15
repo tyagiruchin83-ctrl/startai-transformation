@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Transformation Blueprint - Premium Report</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    
+    .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid #334155; margin-bottom: 40px; }
+    .header h1 { font-size: 20px; }
+    .btn { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+    .btn-primary { background: #3b82f6; color: white; }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-ghost { background: transparent; color: #94a3b8; border: 1px solid #475569; }
+    .btn-ghost:hover { background: #1e293b; }
+    
+    .section { background: #1e293b; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+    .section h2 { color: #60a5fa; margin-bottom: 12px; font-size: 20px; }
+    .section h3 { color: #60a5fa; margin-bottom: 10px; font-size: 16px; }
+    
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 10px; }
+    .grid-item { background: #0f172a; padding: 12px; border-radius: 8px; }
+    .label { color: #94a3b8; font-size: 12px; margin-bottom: 4px; }
+    .value { color: #e2e8f0; font-size: 13px; }
+    
+    .risk-high { color: #ef4444; }
+    .risk-medium { color: #f59e0b; }
+    .risk-low { color: #10b981; }
+    
+    .export-btns { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 20px; }
+    .export-btn { display: block; width: 100%; padding: 10px; background: #334155; color: #e2e8f0; border: 1px solid #475569; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+    .export-btn:hover { background: #475569; border-color: #60a5fa; }
+    
+    .phase { background: #0f172a; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid #3b82f6; }
+    .phase-title { color: #e2e8f0; font-weight: 600; margin-bottom: 6px; }
+    .tag { display: inline-block; padding: 4px 10px; background: #1e293b; border-radius: 12px; font-size: 11px; margin: 2px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>RT - Ruchin Tyagi - AI Transformation Blueprint</h1>
+      <button class="btn btn-ghost" onclick="window.location.href='index.html'">← Back to Portal</button>
+    </div>
+    
+    <div id="reportContent">
+      <p style="text-align: center; color: #94a3b8; padding: 40px;">Loading report...</p>
+    </div>
+  </div>
+
+  <script>
+    // Read answers from localStorage
+    const raw = localStorage.getItem('ai-portal-answers');
+    if (!raw) {
+      document.getElementById('reportContent').innerHTML = '<p style="color: #ef4444; text-align: center; padding: 40px;">No assessment data found. Please <a href="index.html" style="color: #60a5fa;">take the assessment</a> first.</p>';
+    } else {
+      const data = JSON.parse(raw);
+      const { selectedTemplate, answers } = data;
+      generateReport(selectedTemplate, answers);
+    }
+
+    function calculateScores(answers) {
+      let scores = { readiness: 0, automation: 0, data: 0, agentic: 0 };
+      const total = Object.keys(answers).length;
+      if (total === 0) return scores;
+      
+      if (answers['technical-context']?.includes('Cloud-native')) scores.readiness += 40;
+      if (answers['technical-context']?.includes('Modern stack')) scores.readiness += 30;
+      if (answers['timeline']?.includes('3-6 months') || answers['timeline']?.includes('1-3 months')) scores.readiness += 30;
+      scores.readiness = Math.min(100, scores.readiness + (total * 5));
+      
+      if (answers['challenges']?.includes('Manual processes')) scores.automation += 40;
+      if (answers['challenges']?.includes('High costs')) scores.automation += 30;
+      scores.automation = Math.min(100, scores.automation + 30);
+      
+      scores.data = (answers['technical-context']?.includes('Modern stack') || answers['technical-context']?.includes('Cloud-native')) ? 70 : 40;
+      scores.agentic = (answers['use-case']?.toLowerCase().includes('agent')) ? 80 : 50;
+      
+      return scores;
+    }
+
+    function generateReport(selectedTemplate, answers) {
+      const scores = calculateScores(answers);
+      const useCase = answers['use-case'] || 'Not specified';
+      const container = document.getElementById('reportContent');
+      
+      let html = '';
+      
+      // 1. Executive Summary
+      const automationLevel = scores.automation > 70 ? 'High' : scores.automation > 40 ? 'Medium' : 'Low';
+      html += '<div class="section" style="border-left: 4px solid #3b82f6;">';
+      html += '<h2>📋 Executive Summary</h2>';
+      html += '<p style="font-size: 14px;">This AI Transformation Blueprint analyzes the "' + (selectedTemplate?.name || 'Custom') + '" use case with ' + automationLevel.toLowerCase() + ' automation potential (' + scores.automation + '%). ';
+      html += 'The assessment indicates ' + scores.readiness + '% AI readiness with ' + scores.data + '% data readiness. ';
+      html += 'Recommended approach: ' + (scores.agentic > 60 ? 'Agentic AI with autonomous decision-making' : 'Traditional GenAI with workflow automation') + '. ';
+      html += 'Expected ROI timeline: ' + (answers['timeline'] || '3-6 months') + '.</p>';
+      html += '</div>';
+      
+      // 2. Use Case Classification
+      const u = useCase.toLowerCase();
+      let category = 'General AI Automation', complexity = 'Medium', industry = 'Cross-industry';
+      if (u.includes('invoice') || u.includes('document')) { category = 'Document AI Processing'; industry = 'Finance/Accounting'; complexity = 'Medium'; }
+      else if (u.includes('support') || u.includes('customer')) { category = 'Customer Service AI'; industry = 'Customer Experience'; complexity = 'Low-Medium'; }
+      else if (u.includes('hr') || u.includes('employee')) { category = 'HR Automation'; industry = 'Human Resources'; complexity = 'Low'; }
+      else if (u.includes('sales') || u.includes('lead')) { category = 'Sales Intelligence'; industry = 'Sales/Marketing'; complexity = 'Medium'; }
+      else if (u.includes('compliance') || u.includes('regulatory')) { category = 'Regulatory Compliance'; industry = 'Legal/Compliance'; complexity = 'High'; }
+      
+      html += '<div class="section">';
+      html += '<h2>🏷️ Use Case Classification</h2>';
+      html += '<div class="grid">';
+      html += '<div class="grid-item"><div class="label">Category</div><div class="value">' + category + '</div></div>';
+      html += '<div class="grid-item"><div class="label">Industry</div><div class="value">' + industry + '</div></div>';
+      let complexityColor = complexity === 'High' ? 'risk-high' : complexity === 'Medium' ? 'risk-medium' : 'risk-low';
+      html += '<div class="grid-item"><div class="label">Complexity</div><div class="value"><span class="' + complexityColor + '">' + complexity + '</span></div></div>';
+      html += '<div class="grid-item"><div class="label">Est. Automation</div><div class="value">' + scores.automation + '%</div></div>';
+      html += '</div></div>';
+      
+      // 3. Recommended AI Stack
+      html += '<div class="section">';
+      html += '<h2>🤖 Recommended AI Stack</h2>';
+      html += '<div class="grid">';
+      const stack = {
+        'Frontend': 'React 18+ / Next.js 14+',
+        'LLM': (u.includes('support') ? 'Claude 3.5 Sonnet' : u.includes('document') ? 'GPT-4V' : 'GPT-4 + Claude'),
+        'Workflow': answers['technical-context']?.includes('Cloud-native') ? 'LangGraph' : 'CrewAI',
+        'Automation': answers['budget'] === '$500K+' ? 'UiPath Enterprise' : 'Power Automate / n8n',
+        'Database': 'PostgreSQL + Pinecone',
+        'Deployment': answers['technical-context']?.includes('Cloud-native') ? 'AWS/GCP + K8s' : 'Docker + VPS'
+      };
+      for (const [key, value] of Object.entries(stack)) {
+        html += '<div class="grid-item"><div class="label">' + key + '</div><div class="value">' + value + '</div></div>';
+      }
+      html += '</div></div>';
+      
+      // 4. Suggested Architecture
+      html += '<div class="section">';
+      html += '<h2>🏗️ Suggested Architecture</h2>';
+      html += '<p style="font-size: 13px; color: #94a3b8; margin-bottom: 15px;">Layered Architecture with Agentic Workflows</p>';
+      const layers = [
+        { name: 'Presentation Layer', tech: 'React/Next.js + Tailwind', purpose: 'User interface' },
+        { name: 'API Gateway', tech: 'FastAPI / Express.js', purpose: 'Request routing' },
+        { name: 'AI Orchestration', tech: 'LangGraph / CrewAI', purpose: 'Multi-agent coordination' },
+        { name: 'LLM Layer', tech: 'GPT-4, Claude, Gemini', purpose: 'Language understanding' },
+        { name: 'Data Layer', tech: 'PostgreSQL + Pinecone', purpose: 'Structured + vector data' },
+        { name: 'Integration Layer', tech: 'REST APIs, Webhooks', purpose: 'External connectivity' }
+      ];
+      layers.forEach(l => {
+        html += '<div style="background: #0f172a; padding: 12px; border-radius: 8px; margin-bottom: 8px;">';
+        html += '<div style="color: #60a5fa; font-weight: 600; margin-bottom: 4px;">' + l.name + '</div>';
+        html += '<div style="font-size: 12px; color: #e2e8f0;">' + l.tech + '</div>';
+        html += '<div style="font-size: 11px; color: #94a3b8;">' + l.purpose + '</div></div>';
+      });
+      html += '</div>';
+      
+      // 5. ROI Estimation
+      const budget = answers['budget'] || '$100K-$500K';
+      let monthlySavings = 0;
+      if (answers['challenges']?.includes('Manual processes')) monthlySavings += (parseInt(answers['team-size']) || 50) * 20;
+      if (answers['challenges']?.includes('High costs')) monthlySavings += 15000;
+      monthlySavings = monthlySavings || 10000;
+      const implCost = budget.includes('50K') ? 75000 : budget.includes('100K') ? 200000 : 500000;
+      const payback = Math.ceil(implCost / monthlySavings);
+      const roi3yr = Math.round(((monthlySavings * 36 - implCost) / implCost) * 100) + '%';
+      
+      html += '<div class="section">';
+      html += '<h2>💰 ROI Estimation</h2>';
+      html += '<div class="grid">';
+      html += '<div class="grid-item"><div class="label">Implementation Cost</div><div class="value">' + budget + '</div></div>';
+      html += '<div class="grid-item"><div class="label">Monthly Savings</div><div class="value" style="color: #10b981;">$' + monthlySavings.toLocaleString() + '</div></div>';
+      html += '<div class="grid-item"><div class="label">Payback Period</div><div class="value">' + payback + ' months</div></div>';
+      html += '<div class="grid-item"><div class="label">3-Year ROI</div><div class="value" style="color: #10b981; font-weight: bold;">' + roi3yr + '</div></div>';
+      html += '</div></div>';
+      
+      // 6. Complexity Analysis
+      let complexityScore = 20;
+      if (answers['technical-context']?.includes('Legacy systems')) complexityScore += 30;
+      if (answers['technical-context']?.includes('Hybrid')) complexityScore += 20;
+      if (answers['challenges']?.includes('Compliance issues')) complexityScore += 25;
+      const complexityLevel = complexityScore > 50 ? 'High' : complexityScore > 30 ? 'Medium' : 'Low';
+      
+      html += '<div class="section">';
+      html += '<h2>📊 Complexity Analysis</h2>';
+      html += '<div style="margin-bottom: 15px;"><span style="color: #94a3b8;">Overall Score: </span>';
+      let scoreColor = complexityLevel === 'High' ? 'risk-high' : complexityLevel === 'Medium' ? 'risk-medium' : 'risk-low';
+      html += '<span class="' + scoreColor + '; font-weight: bold;">' + complexityScore + '/100 (' + complexityLevel + ')</span></div>';
+      html += '</div>';
+      
+      // 7. Implementation Roadmap
+      html += '<div class="section">';
+      html += '<h2>🗺️ Implementation Roadmap</h2>';
+      html += '<div style="margin-bottom: 15px; font-size: 13px; color: #94a3b8;">Total Duration: ' + (answers['timeline'] || '3-6 months') + '</div>';
+      const phases = [
+        { phase: 'Phase 1: Discovery & Design', duration: '2-4 weeks', activities: ['Requirements', 'Architecture', 'Vendor selection'] },
+        { phase: 'Phase 2: MVP Development', duration: '6-8 weeks', activities: ['AI integration', 'Workflow setup', 'UI development'] },
+        { phase: 'Phase 3: Integration & Testing', duration: '4-6 weeks', activities: ['System integrations', 'Security testing', 'UAT'] },
+        { phase: 'Phase 4: Rollout & Optimization', duration: '4-8 weeks', activities: ['Phased rollout', 'Training', 'Monitoring'] }
+      ];
+      phases.forEach((p, i) => {
+        const colors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'];
+        html += '<div class="phase" style="border-left-color: ' + colors[i] + ';">';
+        html += '<div class="phase-title">' + p.phase + '</div>';
+        html += '<div style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">Duration: ' + p.duration + '</div>';
+        html += '<div>';
+        p.activities.forEach(a => { html += '<span class="tag">' + a + '</span>'; });
+        html += '</div></div>';
+      });
+      html += '</div>';
+      
+      // 8. Risk Assessment
+      const risks = [];
+      if (answers['challenges']?.includes('Compliance issues')) risks.push({ risk: 'Regulatory non-compliance', severity: 'High', mitigation: 'Legal review' });
+      if (answers['technical-context']?.includes('Legacy systems')) risks.push({ risk: 'Integration failures', severity: 'High', mitigation: 'API abstraction' });
+      risks.push({ risk: 'User adoption resistance', severity: 'Medium', mitigation: 'Change management' });
+      risks.push({ risk: 'LLM hallucination', severity: 'Medium', mitigation: 'RAG + human-in-the-loop' });
+      
+      const overallRisk = risks.filter(r => r.severity === 'High').length > 2 ? 'High' : risks.filter(r => r.severity === 'High').length > 0 ? 'Medium' : 'Low';
+      
+      html += '<div class="section">';
+      html += '<h2>⚠️ Risk Assessment</h2>';
+      html += '<div style="margin-bottom: 15px;"><span style="color: #94a3b8;">Overall Risk Level: </span>';
+      let riskColor = overallRisk === 'High' ? 'risk-high' : overallRisk === 'Medium' ? 'risk-medium' : 'risk-low';
+      html += '<span class="' + riskColor + '; font-weight: bold; font-size: 16px;">' + overallRisk + '</span></div>';
+      risks.forEach(r => {
+        const sevColor = r.severity === 'High' ? 'risk-high' : 'risk-medium';
+        html += '<div style="background: #0f172a; padding: 12px; border-radius: 8px; margin-bottom: 10px;">';
+        html += '<div style="display: flex; justify-content: space-between; margin-bottom: 4px;">';
+        html += '<span style="font-size: 13px;">' + r.risk + '</span>';
+        html += '<span class="' + sevColor + '; font-size: 11px; padding: 2px 8px; background: #1e293b; border-radius: 4px;">' + r.severity + '</span>';
+        html += '</div></div>';
+      });
+      html += '</div>';
+      
+      // Export Options
+      html += '<div class="section">';
+      html += '<h2>📥 Export Options</h2>';
+      html += '<div class="export-btns">';
+      html += '<button class="export-btn" onclick="exportJSON()">📥 Download JSON</button>';
+      html += '<button class="export-btn" onclick="exportPDF()">📄 Download PDF</button>';
+      html += '<button class="export-btn" onclick="exportPPT()">📊 Download PPT</button>';
+      html += '<button class="export-btn" onclick="emailReport()">📧 Email Report</button>';
+      html += '<button class="export-btn" onclick="shareLink()">🔗 Share Link</button>';
+      html += '<button class="export-btn" onclick="exportText()">📋 Copy Text</button>';
+      html += '</div></div>';
+      
+      container.innerHTML = html;
+    }
+    
+    // Export functions
+    function exportJSON() {
+      const raw = localStorage.getItem('ai-portal-answers');
+      const data = JSON.parse(raw);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'ai-transformation-blueprint.json';
+      a.click();
+    }
+    
+    function exportPDF() {
+      alert('PDF export functionality - integrate with jsPDF library');
+    }
+    
+    function exportPPT() {
+      alert('PPT export functionality - integrate with PptxGenJS library');
+    }
+    
+    function emailReport() {
+      const subject = 'AI Transformation Blueprint Report';
+      const body = 'Check out my AI Transformation Blueprint report!';
+      window.location.href = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    }
+    
+    function shareLink() {
+      navigator.clipboard.writeText(window.location.href).then(() => alert('Link copied to clipboard!'));
+    }
+    
+    function exportText() {
+      const raw = localStorage.getItem('ai-portal-answers');
+      const data = JSON.parse(raw);
+      let text = 'AI TRANSFORMATION BLUEPRINT REPORT\n\n';
+      text += 'Template: ' + (data.selectedTemplate?.name || 'Custom') + '\n';
+      text += 'Answers: ' + JSON.stringify(data.answers, null, 2);
+      navigator.clipboard.writeText(text).then(() => alert('Report copied to clipboard!'));
+    }
+  </script>
+</body>
+</html>

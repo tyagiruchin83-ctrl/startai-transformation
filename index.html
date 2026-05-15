@@ -521,7 +521,10 @@
         renderCurrentStep();
         renderProgressSteps();
       } else {
-        alert('Assessment complete! (Summary: ' + JSON.stringify(answers) + ')');
+        // Submit — save answers and redirect to report
+        saveCurrentAnswer();
+        localStorage.setItem('ai-portal-answers', JSON.stringify({ selectedTemplate, answers }));
+        window.location.href = 'report.html';
       }
     }
 
