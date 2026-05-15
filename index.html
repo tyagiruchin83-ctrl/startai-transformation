@@ -32,16 +32,21 @@
     .template-name { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
     .template-desc { font-size: 14px; color: #94a3b8; }
     
-    /* Assessment */
+    /* Assessment Layout */
     .hidden { display: none !important; }
-    #assessmentFlow { margin-top: 40px; }
+    .assessment-layout { display: grid; grid-template-columns: 1fr 350px; gap: 30px; margin-top: 40px; }
+    @media (max-width: 768px) {
+      .assessment-layout { grid-template-columns: 1fr; }
+    }
+    
+    /* Main Content */
     .step { background: #1e293b; padding: 30px; border-radius: 12px; margin-bottom: 20px; }
     .step h3 { margin-bottom: 15px; font-size: 24px; }
     .step-nav { display: flex; gap: 10px; margin-top: 20px; }
     
     /* Progress */
-    .progress-steps { display: flex; gap: 10px; margin-bottom: 30px; overflow-x: auto; }
-    .progress-step { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: #1e293b; cursor: pointer; }
+    .progress-steps { display: flex; gap: 10px; margin-bottom: 30px; overflow-x: auto; padding-bottom: 10px; }
+    .progress-step { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: #1e293b; cursor: pointer; white-space: nowrap; }
     .progress-step.active { background: #3b82f6; }
     .progress-step.completed { background: #10b981; }
     
@@ -53,12 +58,20 @@
     .chip:hover { background: #475569; }
     .chip.selected { background: #3b82f6; }
     
+    /* AI Insights Panel */
+    .ai-insights { background: #1e293b; border-radius: 12px; padding: 20px; position: sticky; top: 20px; }
+    .ai-insights h3 { font-size: 18px; margin-bottom: 15px; color: #60a5fa; }
+    .insight-item { background: #0f172a; padding: 12px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; line-height: 1.5; }
+    .insight-item strong { color: #60a5fa; }
+    .use-case-chip { display: inline-block; padding: 6px 12px; background: #334155; border: 1px solid #475569; border-radius: 16px; font-size: 12px; margin: 4px; cursor: pointer; transition: all 0.2s; }
+    .use-case-chip:hover { border-color: #3b82f6; background: #1e3a5f; }
+    
     /* Error */
     #errorBar { position: fixed; top: 0; left: 0; right: 0; background: #ef4444; color: white; padding: 10px; text-align: center; z-index: 99999; display: none; }
   </style>
 </head>
 <body>
-  <div id="errorBar"></div>
+  <div id="errorBar"></div>  
   
   <div class="container">
     <div class="header">
@@ -86,7 +99,15 @@
     <!-- Assessment Flow -->
     <div id="assessmentFlow" class="hidden">
       <div class="progress-steps" id="progressSteps"></div>
-      <div class="step" id="stepContent"></div>
+      <div class="assessment-layout">
+        <div>
+          <div class="step" id="stepContent"></div>
+        </div>
+        <div class="ai-insights" id="aiInsights">
+          <h3>🤖 Live AI Insights</h3>
+          <div id="insightContent"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -98,28 +119,43 @@
       bar.style.display = 'block';
     };
 
-    // Templates
+    // Templates with suggested use cases
     const templates = [
-      { id: 'customer-support', name: 'Customer Support AI', icon: '🎧', desc: 'Automate ticket routing, responses, and escalation' },
-      { id: 'invoice', name: 'Invoice Automation', icon: '📄', desc: 'OCR + LLM for invoice processing' },
-      { id: 'hr', name: 'HR Copilot', icon: '👥', desc: 'Employee self-service, policy Q&A' },
-      { id: 'sales', name: 'Sales AI Agent', icon: '📈', desc: 'Lead qualification, follow-ups' },
-      { id: 'knowledge', name: 'Knowledge Assistant', icon: '📚', desc: 'Internal wiki Q&A' },
-      { id: 'compliance', name: 'Compliance AI', icon: '⚖️', desc: 'Policy monitoring, risk assessment' },
-      { id: 'custom', name: 'Custom Assessment', icon: '⚙️', desc: 'Build a tailored assessment' }
+      { id: 'customer-support', name: 'Customer Support AI', icon: '🎧', desc: 'Automate ticket routing, responses, and escalation',
+        suggestedUseCases: ['Automate ticket routing', 'Auto-respond to common queries', 'Escalate complex issues', 'Analyze support sentiment'] },
+      { id: 'invoice', name: 'Invoice Automation', icon: '📄', desc: 'OCR + LLM for invoice processing',
+        suggestedUseCases: ['Extract data from PDF invoices', 'Validate invoice details', 'Auto-enter to accounting system', 'Flag duplicate invoices'] },
+      { id: 'hr', name: 'HR Copilot', icon: '👥', desc: 'Employee self-service, policy Q&A',
+        suggestedUseCases: ['Answer employee policy questions', 'Automate onboarding paperwork', 'Screen job applications', 'Schedule interviews'] },
+      { id: 'sales', name: 'Sales AI Agent', icon: '📈', desc: 'Lead qualification, follow-ups',
+        suggestedUseCases: ['Qualify inbound leads', 'Send personalized follow-ups', 'Update CRM with lead scores', 'Predict deal closure'] },
+      { id: 'knowledge', name: 'Knowledge Assistant', icon: '📚', desc: 'Internal wiki Q&A',
+        suggestedUseCases: ['Search internal wiki for SOPs', 'Answer technical questions', 'Generate document summaries', 'Guide new hires'] },
+      { id: 'compliance', name: 'Compliance AI', icon: '⚖️', desc: 'Policy monitoring, risk assessment',
+        suggestedUseCases: ['Monitor transactions for AML', 'Auto-generate compliance reports', 'Scan for regulatory changes', 'Audit access logs'] },
+      { id: 'custom', name: 'Custom Assessment', icon: '⚙️', desc: 'Build a tailored assessment', suggestedUseCases: [] }
     ];
 
-    // Steps (9 stages)
+    // Steps (9 stages) with insights
     const steps = [
-      { id: 'use-case', title: 'What is your use case?', type: 'text', placeholder: 'Describe your AI use case...' },
-      { id: 'challenges', title: 'What are your challenges?', type: 'chips', options: ['Manual processes', 'High costs', 'Slow response times', 'Data silos', 'Compliance issues'] },
-      { id: 'users', title: 'Who are the end users?', type: 'chips', options: ['Customers', 'Employees', 'Partners', 'Developers', 'Management'] },
-      { id: 'success-metrics', title: 'How will you measure success?', type: 'chips', options: ['Cost reduction', 'Time savings', 'Accuracy improvement', 'Customer satisfaction', 'Revenue growth'] },
-      { id: 'technical-context', title: 'Technical context?', type: 'chips', options: ['Cloud-native', 'On-premise', 'Hybrid', 'Legacy systems', 'Modern stack'] },
-      { id: 'timeline', title: 'What is your timeline?', type: 'chips', options: ['1-3 months', '3-6 months', '6-12 months', '1+ years'] },
-      { id: 'budget', title: 'What is your budget range?', type: 'chips', options: ['Under $50K', '$50K-$100K', '$100K-$500K', '$500K+'] },
-      { id: 'team-size', title: 'Team size involved?', type: 'text', placeholder: 'e.g., 50' },
-      { id: 'summary', title: 'Review & Submit', type: 'summary' }
+      { id: 'use-case', title: 'What is your use case?', type: 'text', placeholder: 'Describe your AI use case...',
+        insight: 'Be specific about the problem you\'re solving. Include current pain points and desired outcomes.' },
+      { id: 'challenges', title: 'What are your challenges?', type: 'chips', options: ['Manual processes', 'High costs', 'Slow response times', 'Data silos', 'Compliance issues'],
+        insight: 'Select all that apply. Most successful AI projects address 2-3 key challenges initially.' },
+      { id: 'users', title: 'Who are the end users?', type: 'chips', options: ['Customers', 'Employees', 'Partners', 'Developers', 'Management'],
+        insight: 'Consider user technical proficiency. Customer-facing AI needs different UX than internal tools.' },
+      { id: 'success-metrics', title: 'How will you measure success?', type: 'chips', options: ['Cost reduction', 'Time savings', 'Accuracy improvement', 'Customer satisfaction', 'Revenue growth'],
+        insight: 'Define 2-3 KPIs upfront. AI projects with clear metrics are 3x more likely to succeed (McKinsey).' },
+      { id: 'technical-context', title: 'Technical context?', type: 'chips', options: ['Cloud-native', 'On-premise', 'Hybrid', 'Legacy systems', 'Modern stack'],
+        insight: 'Cloud-native environments can leverage serverless AI. Legacy systems may need middleware/API layers.' },
+      { id: 'timeline', title: 'What is your timeline?', type: 'chips', options: ['1-3 months', '3-6 months', '6-12 months', '1+ years'],
+        insight: 'Quick wins in 3 months build momentum. Complex transformations typically need 6-12 months for full ROI.' },
+      { id: 'budget', title: 'What is your budget range?', type: 'chips', options: ['Under $50K', '$50K-$100K', '$100K-$500K', '$500K+'],
+        insight: 'Budget affects approach: Under $100K → SaaS/tools. $100K-$500K → Custom + SaaS. $500K+ → Full custom build.' },
+      { id: 'team-size', title: 'Team size involved?', type: 'text', placeholder: 'e.g., 50',
+        insight: 'Team size impacts change management. Plan for 1 AI champion per 20 team members for smooth adoption.' },
+      { id: 'summary', title: 'Review & Submit', type: 'summary',
+        insight: 'Review your answers. Our AI engine will generate a tailored roadmap based on your inputs.' }
     ];
 
     let selectedTemplate = null;
@@ -152,13 +188,53 @@
       document.querySelector(`[data-id="${id}"]`).classList.add('selected');
       selectedTemplate = templates.find(t => t.id === id);
       document.getElementById('startBtn').disabled = false;
+      updateAIInsightsWithUseCases();
     }
 
     // Select custom (no template)
     function selectCustom() {
       console.log('Custom assessment selected');
-      selectedTemplate = { id: 'custom', name: 'Custom Assessment' };
+      selectedTemplate = { id: 'custom', name: 'Custom Assessment', suggestedUseCases: [] };
+      updateAIInsightsWithUseCases();
       startAssessment();
+    }
+
+    // Update AI Insights with suggested use cases
+    function updateAIInsightsWithUseCases() {
+      const insightContent = document.getElementById('insightContent');
+      if (!insightContent || !selectedTemplate) return;
+      
+      if (selectedTemplate.suggestedUseCases && selectedTemplate.suggestedUseCases.length > 0) {
+        insightContent.innerHTML = `
+          <div class="insight-item">
+            <strong>💡 Suggested Use Cases for ${selectedTemplate.name}:</strong>
+          </div>
+          <div style="margin-top: 10px;">
+            ${selectedTemplate.suggestedUseCases.map(uc => `
+              <span class="use-case-chip" onclick="addUseCase('${uc}')">${uc}</span>
+            `).join('')}
+          </div>
+          <div class="insight-item" style="margin-top: 15px;">
+            <strong>💡 Tip:</strong> Click any use case to add it to your assessment.
+          </div>
+        `;
+      }
+    }
+
+    // Add use case to textarea
+    function addUseCase(useCase) {
+      const step = steps[currentStep];
+      if (step.id === 'use-case') {
+        const textarea = document.getElementById('textAnswer');
+        if (textarea) {
+          const current = textarea.value.trim();
+          textarea.value = current ? `${current}; ${useCase}` : useCase;
+        }
+      } else {
+        // Navigate to use-case step
+        goToStep(0);
+        setTimeout(() => addUseCase(useCase), 100);
+      }
     }
 
     // Start assessment
@@ -170,10 +246,32 @@
         currentStep = 0;
         renderCurrentStep();
         renderProgressSteps();
+        updateAIInsights();
       } catch(e) {
         console.error('Error in startAssessment:', e);
         alert('Error: ' + e.message);
       }
+    }
+
+    // Update AI Insights based on current step
+    function updateAIInsights() {
+      const insightContent = document.getElementById('insightContent');
+      if (!insightContent) return;
+      
+      const step = steps[currentStep];
+      let html = `<div class="insight-item"><strong>📍 Current Step:</strong> ${step.title}</div>`;
+      html += `<div class="insight-item"><strong>💡 Insight:</strong> ${step.insight}</div>`;
+      
+      // Show progress
+      html += `<div class="insight-item"><strong>📊 Progress:</strong> Step ${currentStep + 1} of ${steps.length}</div>`;
+      
+      // Show answers summary if any
+      const answered = Object.keys(answers).length;
+      if (answered > 0) {
+        html += `<div class="insight-item"><strong>✅ Completed:</strong> ${answered} step(s)</div>`;
+      }
+      
+      insightContent.innerHTML = html;
     }
 
     // Render progress steps
@@ -203,7 +301,7 @@
           <div class="chip ${selected.includes(o) ? 'selected' : ''}" onclick="toggleChip('${step.id}', '${o}')">${o}</div>
         `).join('')}</div>`;
       } else if (step.type === 'summary') {
-        content += `<div><h4>Summary</h4><pre>${JSON.stringify({template: selectedTemplate?.name, answers}, null, 2)}</pre></div>`;
+        content += `<div><h4>Summary</h4><pre style="background:#0f172a;padding:15px;border-radius:8px;overflow:auto;font-size:12px;">${JSON.stringify({template: selectedTemplate?.name, answers}, null, 2)}</pre></div>`;
       }
       
       content += `
@@ -214,6 +312,7 @@
       `;
       
       container.innerHTML = content;
+      updateAIInsights();
     }
 
     // Toggle chip selection
