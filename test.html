@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>TEST PAGE - Toggle Test</title>
+  <style>
+    body { font-family: sans-serif; padding: 40px; background: #0f172a; color: white; }
+    button { padding: 15px 30px; font-size: 16px; margin: 10px; cursor: pointer; }
+    .hidden { display: none; }
+    #page2 { background: #1e293b; padding: 30px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>✅ TEST PAGE - Toggle Test</h1>
+  <p>If you can see this, the page loaded correctly.</p>
+  
+  <div id="page1">
+    <h2>Page 1 - Home</h2>
+    <p>This is the home page.</p>
+    <button onclick="showPage2()" style="background: #3b82f6; color: white; border: none; border-radius: 8px;">Click to go to Page 2</button>
+  </div>
+  
+  <div id="page2" class="hidden">
+    <h2>Page 2 - Assessment</h2>
+    <p>✅ TOGGLE WORKS! This is the assessment page.</p>
+    <button onclick="showPage1()" style="background: #475569; color: white; border: none; border-radius: 8px;">Back to Home</button>
+  </div>
+  
+  <script>
+    function showPage2() {
+      document.getElementById('page1').classList.add('hidden');
+      document.getElementById('page2').classList.remove('hidden');
+      console.log('Went to page 2');
+    }
+    function showPage1() {
+      document.getElementById('page2').classList.add('hidden');
+      document.getElementById('page1').classList.remove('hidden');
+      console.log('Went to page 1');
+    }
+    console.log('Test page loaded');
+  </script>
+</body>
+</html>
