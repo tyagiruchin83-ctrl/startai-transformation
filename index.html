@@ -1027,7 +1027,11 @@
       
       // Event Listeners
       startBtn.addEventListener('click', startAssessment);
-      customBtn.addEventListener('click', () => selectTemplate({ id: 'custom', name: 'Custom Assessment' }));
+      customBtn.addEventListener('click', () => {
+        selectedTemplate = { id: 'custom', name: 'Custom Assessment' };
+        startBtn.disabled = false;
+        startAssessment();
+      });
       backBtn.addEventListener('click', goBack);
       nextBtn.addEventListener('click', goNext);
       skipBtn.addEventListener('click', skipStep);
