@@ -331,6 +331,16 @@
       }
     }
 
+    // Fill use case directly (for step-level chips)
+    function fillUseCase(useCase) {
+      const textarea = document.getElementById('textAnswer');
+      if (textarea) {
+        const current = textarea.value.trim();
+        textarea.value = current ? `${current}; ${useCase}` : useCase;
+        textarea.focus();
+      }
+    }
+
     // Start assessment
     function startAssessment() {
       console.log('Starting assessment...');
@@ -479,6 +489,20 @@
         const val = answers[step.id] || '';
         content += `<textarea id="textAnswer" placeholder="${step.placeholder || ''}" oninput="showAISuggestions('${step.id}', this.value)">${val}</textarea>`;
         content += `<div id="aiSuggestionBox"></div>`;
+        
+        // Add suggested use case chips for use-case step
+        if (step.id === 'use-case' && selectedTemplate && selectedTemplate.suggestedUseCases && selectedTemplate.suggestedUseCases.length > 0) {
+          content += `
+            <div style="margin-top: 15px;">
+              <div style="font-size: 13px; color: #94a3b8; margin-bottom: 8px;">💡 Suggested use cases for ${selectedTemplate.name}:</div>
+              <div id="stepUseCaseChips" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                ${selectedTemplate.suggestedUseCases.map(uc => `
+                <div class="use-case-chip" onclick="fillUseCase('${uc.replace(/'/g, "\\'")}')">${uc}</div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
       } else if (step.type === 'chips') {
         const selected = answers[step.id] || [];
         content += `<div class="chip-group">${step.options.map(o => `
