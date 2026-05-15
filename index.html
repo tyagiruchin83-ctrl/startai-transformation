@@ -1160,9 +1160,17 @@
 
     // Start Assessment
     function startAssessment() {
-      templateSection.classList.add('hidden');
-      assessmentFlow.classList.remove('hidden');
-      renderCurrentStep();
+      try {
+        console.log('startAssessment called', { templateSection, assessmentFlow, stepsLength: steps?.length });
+        if (!templateSection) throw new Error('templateSection not found');
+        if (!assessmentFlow) throw new Error('assessmentFlow not found');
+        templateSection.classList.add('hidden');
+        assessmentFlow.classList.remove('hidden');
+        renderCurrentStep();
+      } catch(e) {
+        console.error('startAssessment error:', e.message, e.stack);
+        alert('Error: ' + e.message);
+      }
     }
 
     // Render Progress Steps
